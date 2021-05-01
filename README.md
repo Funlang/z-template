@@ -170,10 +170,27 @@ ZData 为零配置嵌入式前端框架, 不需要安装, 只需要引用即可.
     ```
     :style.name=value / :css.name=value
     :style.name.value=条件 / :css.name.value=...
-    可以简写为 ..name 和 #name, 如下:
-      ..width=100
-      #border-width=4
+    可以简写为 ..name 和 #name, 以及 !name=string-value, 如下:
+      ..width=`100px`
+      #border-width=`4px`
+      !border-width=4px
     ```
+
+    * !!! 特别注意:
+
+      - : :: @ . .. #
+      ```
+      : :: @ . .. # 绑定, 后面的值全部都是 js 表达式, 可以是 js 变量, 或者是字符串, 字符串需要另外加 ' " ` 等包围起来
+      ```
+      - ${...}
+      ```
+      非绑定的属性值中含有 ${...}, 会自动解析成一个字符串, 相当于 `...${...}...`
+      ```
+      - !
+      ```
+      ! 与 含有 ${} 的属性值类似, 会自动解析成 :css.style-name=`string-value`
+      ```
+
   - :attr.camel 支持驼峰表示法
 
   - ::value=propName, ::style.value=propName, ::css.value=propName
@@ -181,6 +198,7 @@ ZData 为零配置嵌入式前端框架, 不需要安装, 只需要引用即可.
     其中 propName 只支持驼峰表示法, DOM 属性(包括 style)可以增加 .camel 修饰符
     双向绑定默认在 change 中触发回写行为, 只有 input text 同时在 input 中触发回写
     可以增加 .input / .change 强制在 input / change 中回写
+    支持 .trim / .number 修饰符
     ```
     ```
     目前有些属性如 style.value 修改, 不会自动触发响应式, 需要在当前执行 el 执行 el.fireChange()
@@ -231,6 +249,10 @@ ZData 为零配置嵌入式前端框架, 不需要安装, 只需要引用即可.
     ```
     z-template 需要显式调用 ZData.start(), z-data 一般不需要
     ```
+  - ZData.proxy()
+    ```
+    在 z-data 获取 data 数据时, 用 ZData.proxy() 包装返回, 以使数据获得响应式
+    ```
   - ZData.loadHTML(html, p, before)
     ```
     动态加载 html, p - 需要插入的父节点(默认 body), before - 需要插入该子节点之前
@@ -241,6 +263,40 @@ ZData 为零配置嵌入式前端框架, 不需要安装, 只需要引用即可.
     ```
     在 z-data 之外修改节点 style, 如果是双向绑定, 需要调用该节点的 .fireChange()
     ```
+
+### 组件
+
+  - z-comp 为 ZData 组件
+
+    ```html
+    <tag z-comp=...>
+    ````
+    z-comp 可以是一个 ./ 相对路径, 或者是一个 http(s): 的网络路径
+
+    ```html
+    <tag z-comp=./z-comp-2.html>
+    <tag z-comp=https://funlang.org/zdata/test/z-comp-2.html>
+    ````
+    z-comp 还可以是一个 Promise 函数, 用来加载组件代码
+
+    ```html
+    <tag z-comp="load_z_comp('z-comp-2')">
+    ````
+    z-comp 可以选择保留 / 删除组件占位符, z-xxx 或者含有 del 属性的, 删除占位符
+
+    ```html
+    删除占位符:
+    <z-comp  z-comp=https://funlang.org/zdata/test/z-comp-2.html>
+    <div del z-comp=https://funlang.org/zdata/test/z-comp-2.html>
+    ````
+    ```html
+    保留占位符:
+    <div z-comp=https://funlang.org/zdata/test/z-comp-2.html>
+    ````
+
+    z-comp demo:
+    * https://codepen.io/funlang/pen/ExZBPJL
+    * https://codepen.io/funlang/pen/RwKzaOo
 
 ## 加入我们
 

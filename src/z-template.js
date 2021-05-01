@@ -33,9 +33,9 @@ const ZData = (() => {
     const now = Date.now;
     const nil = undefined;
     const re_for = /^(?:\s*(?:(\w+)\s*:\s*)?(\w*)(?:\s*,\s*(\w+))?\s+in\s+)?(.+)$/;
-    const re_attr = /^(?:(:)(:?)|(@)|([.#]))?([^.]*)(?:[.]([^.].*))?$/;
+    const re_attr = /^(?:(:)(:?)|(@)|([.#!]))?([^.]*)(?:[.]([^.].*))?$/;
     const re_text = /\$\{/;
-    const re_bind = /^[:@.#]./;
+    const re_bind = /^[:@.#!]./;
     let age = 0;
     let _n_;
 
@@ -48,9 +48,9 @@ const ZData = (() => {
     let initElements = (el, data, env, self) => {
         walk(el, (el) => {
             let attrs;
-            if (el[z_age] === age || (attrs = el[getAttributeNames]())[includes](znone)) return false;
+            if (el[z_age] == age || (attrs = el[getAttributeNames]())[includes](znone)) return false;
             if ((attrs = attrs || el[getAttributeNames]())[includes](zdata) && !self) initComponent(el, data, env);
-            else if ("template" === el.localName) {
+            else if (el.content && "template" == el.localName) {
                 let exp;
                 if ((exp = el[getAttribute](zfor))) execFor(el, exp, data, env);
                 else if ((exp = el[getAttribute](zif)) || 1/*attrs[includes](zelse)*/) execIf(el, exp, data, env);
@@ -120,7 +120,7 @@ const ZData = (() => {
             let v = el[getAttribute](a);
             if (!re_bind[test](a) && !re_text[test](v)) return;
             let ms = re_attr.exec(a); // 1-bind 2 3-event 4-class/css 5-name 6-modifiers
-            let k = ms[4] ? (ms[4] === "#" || !ms[5] ? s_tyle : c_lass) : ms[5]; // key/name
+            let k = ms[4] ? (ms[4] != "." || !ms[5] ? s_tyle : c_lass) : ms[5]; // key/name
             if (k) {
                 let modifiers = ms[6] && ms[6].split(".");
                 let ps = {
@@ -129,31 +129,31 @@ const ZData = (() => {
                     m: ms[4] && ms[5] ? [ms[5]].concat(modifiers || []) : modifiers, // modifiers
                     e: v, // exp
                 };
-                if (!ps.b) ps.e = "`" + ps.e + "`";
-                if (ps.b === 3) setEvent();
+                if (!ps.b || ms[4] == "!") ps.e = "`" + ps.e + "`";
+                if (ps.b == 3) setEvent();
                 else clsChanged = setValue(el, ps, ps.e && tryEval(el, ps.e, data, env), oldc) || clsChanged;
             }
         });
-        if ((f = el.firstChild) && f === el.lastChild && f.nodeType === 3 && re_text[test]((t = f.nodeValue))) {
+        if ((f = el.firstChild) && f == el.lastChild && f.nodeType == 3 && re_text[test]((t = f.nodeValue))) {
             setValue(el, { k: "text" }, tryEval(el, "`" + t + "`", data, env));
         }
         if (clsChanged) el.className = Obj_keys(oldc).join(" ");
     };
 
     let setValue = (el, ps, value, cls) => {
-        if (ps.k === "text") el.textContent = value;
-        else if (ps.k === "html") el.innerHTML = value;
-        else if (ps.k === c_lass) {
+        if (ps.k == "text") el.textContent = value;
+        else if (ps.k == "html") el.innerHTML = value;
+        else if (ps.k == c_lass) {
             if (ps.m && ps.m[length] > 0) {
                 let v = ps.e === "" ? true : value;
                 ps.m[forEach]((name) => {
-                    if (typeof v === "boolean" || !name.endsWith("-")) {
+                    if (typeof v == "boolean" || !name.endsWith("-")) {
                         v ? (cls[name] = true) : delete cls[name];
                     } else cls[name + v] = true;
                 });
             } else {
                 if (Array.isArray(value)) {
-                } else if (typeof value === "object") {
+                } else if (typeof value == "object") {
                     Obj_keys(value)[forEach]((name) => (value[name] ? (cls[name] = true) : delete cls[name]));
                     return true;
                 } else value = value ? value.split(" ") : [];
@@ -161,12 +161,12 @@ const ZData = (() => {
             }
             return true;
         } else {
-            if (ps.k === s_tyle || ps.k === "css") {
+            if (ps.k == s_tyle || ps.k == "css") {
                 if (ps.m && ps.m[length] > 0) {
-                    if (ps.m[length] === 1) value = { [ps.m[0]]: value };
+                    if (ps.m[length] == 1) value = { [ps.m[0]]: value };
                     else value = { [ps.m[0]]: value && ps.m[1] };
                 }
-                if (typeof value === "object") {
+                if (typeof value == "object") {
                     Obj_keys(value)[forEach]((name) => (el[s_tyle][name] = value[name]));
                     return;
                 }
@@ -181,7 +181,7 @@ const ZData = (() => {
     let tryEval = (el, exp, data = {}, env = {}) => {
         return tryCatch(
             () => {
-                if (typeof exp === "function") return exp.call(data);
+                if (typeof exp == "function") return exp.call(data);
                 let f =
                     Functions[exp] ||
                     (Functions[exp] = new Function(
