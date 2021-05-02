@@ -33,9 +33,9 @@ const ZData = (() => {
     const now = Date.now;
     const nil = undefined;
     const re_for = /^(?:\s*(?:(\w+)\s*:\s*)?(\w*)(?:\s*,\s*(\w+))?\s+in\s+)?(.+)$/;
-    const re_attr = /^(?:(:)(:?)|(@)|([.#!]))?([^.]*)(?:[.]([^.].*))?$/;
-    const re_text = /\$\{/;
     const re_bind = /^[:@.#!]./;
+    const re_attr = /^(?:(:)(:?)|(@)|([.#!]))?([^.]*)(?:[.]([^.].*))?$/;
+    const $e_text = (s) => s.indexOf("${") >= 0 && s.indexOf("`") < 0;
     let age = 0;
     let _n_;
 
@@ -113,12 +113,12 @@ const ZData = (() => {
         let c = el.className;
         if (c) {
             c = classNames[c] || (classNames[c] = c.split(" "));
-            c[forEach]((name) => (oldc[name] = true));
+            c[forEach]((name) => (oldc[name] = 1));
         }
         let f, t, clsChanged;
         attrNames[forEach]((a) => {
             let v = el[getAttribute](a);
-            if (!re_bind[test](a) && !re_text[test](v)) return;
+            if (!re_bind[test](a) && !$e_text(v)) return;
             let ms = re_attr.exec(a); // 1-bind 2 3-event 4-class/css 5-name 6-modifiers
             let k = ms[4] ? (ms[4] != "." || !ms[5] ? s_tyle : c_lass) : ms[5]; // key/name
             if (k) {
@@ -134,7 +134,7 @@ const ZData = (() => {
                 else clsChanged = setValue(el, ps, ps.e && tryEval(el, ps.e, data, env), oldc) || clsChanged;
             }
         });
-        if ((f = el.firstChild) && f == el.lastChild && f.nodeType == 3 && re_text[test]((t = f.nodeValue))) {
+        if ((f = el.firstChild) && f == el.lastChild && f.nodeType == 3 && $e_text((t = f.nodeValue))) {
             setValue(el, { k: "text" }, tryEval(el, "`" + t + "`", data, env));
         }
         if (clsChanged) el.className = Obj_keys(oldc).join(" ");
@@ -148,16 +148,16 @@ const ZData = (() => {
                 let v = ps.e === "" ? true : value;
                 ps.m[forEach]((name) => {
                     if (typeof v == "boolean" || !name.endsWith("-")) {
-                        v ? (cls[name] = true) : delete cls[name];
-                    } else cls[name + v] = true;
+                        v ? (cls[name] = 1) : delete cls[name];
+                    } else cls[name + v] = 1;
                 });
             } else {
                 if (Array.isArray(value)) {
                 } else if (typeof value == "object") {
-                    Obj_keys(value)[forEach]((name) => (value[name] ? (cls[name] = true) : delete cls[name]));
+                    Obj_keys(value)[forEach]((name) => (value[name] ? (cls[name] = 1) : delete cls[name]));
                     return true;
                 } else value = value ? value.split(" ") : [];
-                value[forEach]((name) => (cls[name] = true));
+                value[forEach]((name) => (cls[name] = 1));
             }
             return true;
         } else {
