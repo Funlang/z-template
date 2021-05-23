@@ -18,8 +18,8 @@ Z-data is an extremely lightweight zero configuration embedded front-end framewo
 ## 特性:
 
 - 无 VDom, 采用 H5 template 技术
-- 极简, 超轻量级, z-data minify ~ 7K, z-template minify ~ 3K
-- 符合 H5 趋势, 技术简单, z-data 0.7 ~500行代码, z-template 1.2 ~200多行代码
+- 极简, 超轻量级, z-data minify ~ 8K, z-template minify ~ 3K
+- 符合 H5 趋势, 技术简单, z-data ~500多行代码, z-template ~200多行代码
 - template 支持 for, if else
 - template 内支持多根
 - 嵌入式, 可以和其他框架无缝嵌入
@@ -80,8 +80,10 @@ ZData 为零配置嵌入式前端框架, 不需要安装, 只需要引用即可.
 
 临时地址:
 - 全功能  https://funlang.org/zdata/z-data.min.js
+- CDN    https://cdn.jsdelivr.net/gh/Funlang/z-data@main/dist/z-data.min.js
 或
 - 仅渲染  https://funlang.org/zdata/z-template.min.js
+- CDN    https://cdn.jsdelivr.net/gh/Funlang/z-template@main/dist/z-template.min.js
 
 * z-template 需用户执行 ZData.start(), z-data 不需要.
 
@@ -239,7 +241,13 @@ ZData 为零配置嵌入式前端框架, 不需要安装, 只需要引用即可.
       ```
     * 键盘 modifier
       ```
-      <key>     enter, escape, space, f1 等
+      <key>     enter, escape, space, f1 等, 详见:
+                https://developer.mozilla.org/en-US/docs/Web/API/KeyboardEvent/key/Key_Values
+      特殊处理:  space: " ", slash: /, gt: >, eq: =
+      ```
+    * 鼠标 modifier
+      ```
+      <button>  left, mid, right
       ```
 ### 变量
 
@@ -247,7 +255,11 @@ ZData 为零配置嵌入式前端框架, 不需要安装, 只需要引用即可.
     ```
     $el.$data 组件的包装 data 对象
     ```
-  - $event 事件内的事件对象
+  - ZData.nobserve (default false)
+    ```
+    no observe DOM for dynamic creating z-data node
+      use ZData.loadHTML(), so observe DOM is not needed.
+    ```
 
 ### 函数
 
@@ -259,7 +271,7 @@ ZData 为零配置嵌入式前端框架, 不需要安装, 只需要引用即可.
     ```
     在 z-data 获取 data 数据时, 用 ZData.proxy() 包装返回, 以使数据获得响应式
     ```
-  - ZData.loadHTML(html, p, before)
+  - ZData.loadHTML(html, p, before, args)
     ```
     动态加载 html, p - 需要插入的父节点(默认 body), before - 需要插入该子节点之前
 
@@ -288,6 +300,21 @@ ZData 为零配置嵌入式前端框架, 不需要安装, 只需要引用即可.
     ```html
     <tag z-comp="load_z_comp('z-comp-2')">
     ````
+
+    * ZData.get
+
+      z-comp 支持 z:// 协议插件, ZData.get 函数存在时, z:// 插件生效
+      ```
+      注意: ZData.get 是一个 Promise 函数, 返回类似于 fetch(url).then(res => res.text()) 之后的部分
+      ```
+      ```
+      定义并加载插件:
+      document.addEventListener("DOMContentLoaded", () => setTimeout(() => ZData.get = ...))
+
+      应用 ZData.get 加载 table-v1.5.2 组件
+      <z- z-comp=z://table-v1.5.2></z->
+      ```
+
     z-comp 可以选择保留 / 删除组件占位符, z-xxx 或者含有 del 属性的, 删除占位符
 
     ```html
@@ -300,7 +327,12 @@ ZData 为零配置嵌入式前端框架, 不需要安装, 只需要引用即可.
     <div z-comp=https://funlang.org/zdata/test/z-comp-2.html>
     ````
 
-    z-comp demo:
+  - z-comp args
+    ```html
+    <tag z-comp=... args=...>
+    ````
+
+  - z-comp demo:
     * https://codepen.io/funlang/pen/ExZBPJL
     * https://codepen.io/funlang/pen/RwKzaOo
 
